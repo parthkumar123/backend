@@ -14,14 +14,30 @@ const generateToken = (userId) => {
 
 exports.signup = async (req, res) => {
     try {
-        // Fetch username and password from request body
-        const { username, password } = req.body;
+        // Fetch email and password from request body
+        const { email, password } = req.body;
+
+        // Basic validation on the server side
+        if (!email || !password) {
+            return res.status(400).send({
+                status: 'error',
+                message: 'Email and password are required.',
+            });
+        }
+
+        // Basic password strength validation
+        if (password.length < 6) {
+            return res.status(400).send({
+                status: 'error',
+                message: 'Password must be at least 6 characters long.',
+            });
+        }
 
         // Hash user password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Store username and hashed password in User collection
-        const user = new User({ username, password: hashedPassword });
+        // Store email and hashed password in User collection
+        const user = new User({ email, password: hashedPassword });
         await user.save();
 
         // Send a success message
@@ -34,7 +50,15 @@ exports.signup = async (req, res) => {
         if (err.code === 11000) {
             return res.status(409).send({
                 status: 'error',
-                message: 'Username already exists. Please choose a different username.',
+                message: 'Email already exists. Please use a different email address.',
+            });
+        }
+        // Handle validation errors
+        if (err.name === 'ValidationError') {
+            const messages = Object.values(err.errors).map(val => val.message);
+            return res.status(400).send({
+                status: 'error',
+                message: messages.join(', '),
             });
         }
         // Handle other errors
@@ -47,15 +71,30 @@ exports.signup = async (req, res) => {
 
 exports.login = async (req, res) => {
     try {
-        // Fetch username and password from request body
-        const { username, password } = req.body;
-        const user = await User.findOne({ username });
-        // Check wether user exists or not
+        // Fetch email and password from request body
+        const { email, password } = req.body;
+
+        // Basic validation
+        if (!email || !password) {
+            return res.status(400).send({
+                status: 'error',
+                message: 'Email and password are required.',
+            });
+        }
+
+        // Normalize email (convert to lowercase)
+        const normalizedEmail = email.toLowerCase().trim();
+
+        const user = await User.findOne({ email: normalizedEmail });
+        // Check whether user exists or not
         if (!user) {
-            throw new Error('User not found');
+            return res.status(401).send({
+                status: 'error',
+                message: 'Email not registered. Please check your email or sign up.',
+            });
         };
 
-        // Check wether password is correct or not
+        // Check whether password is correct or not
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             // Passwords don't match
@@ -88,7 +127,10 @@ exports.logout = async (req, res) => {
         // Extract token from request headers
         const token = req.headers.authorization?.split(' ')?.[1];
         if (!token) {
-            throw new Error('Token not found');
+            return res.status(400).json({
+                status: 'error',
+                message: 'Authorization token is required'
+            });
         };
 
         // Add token to blacklist
@@ -96,9 +138,16 @@ exports.logout = async (req, res) => {
         await blacklistedToken.save();
 
         // Return logout successful message
-        return res.json({ message: 'Logout successful' });
+        return res.json({
+            status: 'success',
+            message: 'Logout successful'
+        });
     } catch (err) {
-        // Return err message
-        return res.status(500).json({ error: err.message });
+        // Return err message with consistent format
+        return res.status(500).json({
+            status: 'error',
+            message: 'An error occurred while logging out',
+            error: err.message
+        });
     }
 };

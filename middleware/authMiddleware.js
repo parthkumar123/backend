@@ -7,13 +7,19 @@ module.exports = async (req, res, next) => {
         // Extract and Validate token from the request headers
         const token = req.headers.authorization?.split(' ')?.[1];
         if (!token) {
-            return res.status(401).json({ message: 'Auth failed' })
+            return res.status(401).json({
+                status: 'error',
+                message: 'Authentication failed. Token is missing.'
+            });
         };
 
         // Check if token is blacklisted
         const isBlacklisted = await BlacklistToken.exists({ token });
         if (isBlacklisted) {
-            return res.status(401).json({ message: 'Token expired' })
+            return res.status(401).json({
+                status: 'error',
+                message: 'Authentication failed. Token has been invalidated.'
+            });
         };
 
         // Verify token is valid or not
@@ -23,7 +29,11 @@ module.exports = async (req, res, next) => {
         req.userId = decoded.userId;
         next();
     } catch (err) {
-        // Return error message
-        return res.status(401).json({ message: 'Auth failed' });
+        // Return error message with more details
+        return res.status(401).json({
+            status: 'error',
+            message: 'Authentication failed. Invalid token.',
+            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
     }
 };
