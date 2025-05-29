@@ -1,8 +1,17 @@
 "use strict";
+const cors = require('cors');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const app = express();
+
+// Enable CORS for all routes
+app.use(cors({
+    origin: '*', // Allow all origins, you can specify specific origins if needed
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    allowedHeaders: 'Content-Type, Authorization',
+    credentials: true // Allow credentials if needed
+}));
 
 // Middleware
 app.use(bodyParser.json());
