@@ -16,7 +16,7 @@ exports.getAllTasks = async (req, res) => {
 exports.createTask = async (req, res) => {
     try {
         // Extract task details from the request body
-        const { title, description, dueDate, status } = req.body;
+        const { title, description, dueDate, status, priority, category } = req.body;
 
         // Store task details in Tasks collection
         const task = new Task({
@@ -24,6 +24,8 @@ exports.createTask = async (req, res) => {
             description,
             dueDate,
             status,
+            priority,
+            category,
             createdBy: req.userId,
         });
         await task.save();
@@ -44,12 +46,12 @@ exports.updateTask = async (req, res) => {
             throw new Error('taskId not specified!');
         }
         // Get request body details to update task details
-        const { title, description, dueDate, status } = req.body;
+        const { title, description, dueDate, status, priority, category } = req.body;
 
         // Update task details in Tasks collection
         const updatedTask = await Task.findByIdAndUpdate(
             taskId,
-            { title, description, dueDate, status },
+            { title, description, dueDate, status, priority, category },
             { new: true }
         );
 
