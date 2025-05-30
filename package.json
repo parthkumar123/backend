@@ -5,8 +5,8 @@
   "main": "server.js",
   "scripts": {
     "dev": "set NODE_ENV=development&&nodemon server.js",
-    "lint": "eslint --ext .js .",
-    "lint:fix": "eslint --ext .js --fix .",
+    "lint": "eslint . --config eslint.config.js",
+    "lint:fix": "eslint . --fix --config eslint.config.js",
     "format": "prettier --write .",
     "prepare": "husky"
   },
@@ -23,13 +23,19 @@
     "nodemon": "^3.1.10",
     "path": "^0.12.7"
   },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix --config eslint.config.js",
+      "prettier --write"
+    ]
+  },
   "devDependencies": {
-    "@commitlint/cli": "^19.0.0",
-    "@commitlint/config-conventional": "^19.0.0",
-    "@eslint/js": "^8.56.0",
-    "eslint": "^8.56.0",
-    "husky": "^9.0.11",
-    "lint-staged": "^15.2.0",
-    "prettier": "^3.2.5"
+    "@eslint/js": "^9.27.0",
+    "eslint": "^9.27.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.4.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.0",
+    "prettier": "^3.5.3"
   }
 }
